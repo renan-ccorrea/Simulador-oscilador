@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Oscilador Forçado e Ressonância — Renan Champe Correa</title>
+  <title>Oscilador Forçado e Ressonância — Renan Correa</title>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
@@ -11,6 +11,16 @@
     :root {
       --bg: #0a0a0f; --surface: #12121a; --surface2: #1a1a26; --border: #2a2a3d;
       --accent: #7c6bff; --accent2: #ff6b9d; --accent3: #6bffd0; --warn: #ffb347;
+      
+      /* Cores Exclusivas para Gráficos */
+      --c-time: #ff6b9d;     /* Rosa - Posição */
+      --c-phase: #b28dff;    /* Roxo Claro - Fase */
+      --c-reson: #f9e076;    /* Amarelo - Ressonância */
+      --c-power: #00e5ff;    /* Ciano - Potência */
+      --c-ek: #ffb347;       /* Laranja - Cinética */
+      --c-ep: #33aaff;       /* Azul - Potencial */
+      --c-et: #00ffaa;       /* Verde - Energia Total */
+      
       --text: #e8e8f0; --text2: #8888aa;
     }
     body.light-mode {
@@ -30,12 +40,20 @@
     .wrap { position: relative; z-index: 1; max-width: 1220px; margin: 0 auto; padding: 2rem 1.5rem; }
 
     header { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
-    header h1 { font-size: 1.9rem; font-weight: 800; letter-spacing: -1px; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    header h1 { font-size: 1.9rem; font-weight: 800; letter-spacing: -1px; background: linear-gradient(135deg, var(--c-time), var(--c-phase)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     header p { font-family: 'Space Mono', monospace; font-size: 0.67rem; color: var(--text2); text-align: right; line-height: 1.7; }
 
     .grid { display: grid; grid-template-columns: 1fr 1fr 310px; gap: 1.25rem; }
-    @media (max-width: 1100px) { .grid { grid-template-columns: 1fr 1fr; } .scol { grid-column: span 2; order: -1; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;} }
-    @media (max-width: 768px)  { .grid { grid-template-columns: 1fr; } .scol { grid-column: span 1; grid-template-columns: 1fr; display: none; } .scol.open { display: flex; flex-direction: column; } }
+    
+    @media (max-width: 1100px) { 
+        .grid { grid-template-columns: 1fr 1fr; } 
+        .scol { grid-column: span 2; order: -1; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;} 
+    }
+    @media (max-width: 768px)  { 
+        .grid { grid-template-columns: 1fr; } 
+        #panelControls { grid-column: span 1; display: none; } 
+        #panelControls.open { display: flex !important; flex-direction: column; } 
+    }
 
     .mobile-toggle { display: none; width: 100%; padding: 0.8rem; background: var(--surface2); border: 1px solid var(--accent); color: var(--accent); border-radius: 9px; font-family: 'Space Mono', monospace; font-weight: bold; cursor: pointer; text-align: center; margin-bottom: 1rem; transition: 0.3s; }
     .mobile-toggle:hover { background: var(--accent); color: #fff; }
@@ -51,7 +69,7 @@
     .met { background: var(--surface2); border-radius: 8px; padding: 0.55rem; border: 1px solid var(--border); position: relative; transition: background 0.3s, border-color 0.3s; }
     .met-lbl { font-size: 0.58rem; font-family: 'Space Mono', monospace; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; }
     .met-val { font-size: 0.92rem; font-weight: 700; margin-top: 0.2rem; font-family: 'Space Mono', monospace; }
-    .c1 { color: var(--accent); } .c2 { color: var(--accent2); } .c3 { color: var(--accent3); } .c4 { color: var(--warn); }
+    .c1 { color: var(--c-time); } .c2 { color: var(--c-phase); } .c3 { color: var(--c-reson); } .c4 { color: var(--warn); } .c5 { color: var(--c-power); } .c6 { color: var(--c-et); }
     .met[data-tip]:hover::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: #1a1a2e; border: 1px solid var(--border); color: #fff; font-family: 'Space Mono', monospace; font-size: 0.6rem; padding: 5px 9px; border-radius: 6px; white-space: nowrap; z-index: 99; pointer-events: none; }
 
     .help-icon { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--accent); color: var(--accent); font-size: 0.55rem; font-family: sans-serif; font-weight: bold; cursor: help; margin-left: 5px; position: relative; vertical-align: middle; }
@@ -103,11 +121,11 @@
     </div>
     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
       <button id="btnTheme" style="font-size:0.55rem; padding:2px 8px;">Alternar Tema (Claro/Escuro)</button>
-      <p>Integração RK4 · Curva de ressonância em tempo real</p>
+      <p>Integração RK4 · Curvas Analíticas em Tempo Real</p>
     </div>
   </header>
 
-  <button class="mobile-toggle" id="btnMenuToggle">⚙️ MOSTRAR CONTROLOS DA SIMULAÇÃO</button>
+  <button class="mobile-toggle" id="btnMenuToggle">⚙️ MOSTRAR CONTROLES DA SIMULAÇÃO</button>
 
   <div class="grid">
 
@@ -120,16 +138,26 @@
           <div class="met" data-tip="Velocidade instantânea (m/s)"><div class="met-lbl">Velocidade v</div><div class="met-val c2" id="mV">—</div></div>
           <div class="met" data-tip="Amplitude máxima observada"><div class="met-lbl">Amp. máx.</div><div class="met-val c3" id="mAmp">—</div></div>
           <div class="met" data-tip="ω₀ = √(k/m)"><div class="met-lbl">ω₀ natural</div><div class="met-val c4" id="mW0">—</div></div>
-          <div class="met" data-tip="Frequência angular externa"><div class="met-lbl">ω força</div><div class="met-val c1" id="mWf">—</div></div>
-          <div class="met" data-tip="Defasagem φ entre x(t) e F(t)"><div class="met-lbl">Defasagem φ</div><div class="met-val c3" id="mPhi">—</div></div>
+          <div class="met" data-tip="Frequência angular externa"><div class="met-lbl">ω força</div><div class="met-val c5" id="mWf">—</div></div>
+          <div class="met" data-tip="Defasagem φ entre x(t) e F(t)"><div class="met-lbl">Defasagem φ</div><div class="met-val c6" id="mPhi">—</div></div>
         </div>
       </div>
+      
       <div class="card">
         <div class="ctitle">Espaço de Fase (x, v)</div>
         <canvas id="phaseCanvas" width="400" height="145" style="width:100%;"></canvas>
         <div class="leg">
-          <div class="li"><div class="ld" style="background:var(--accent2)"></div>Trajetória (RK4)</div>
+          <div class="li"><div class="ld" style="background:var(--c-phase)"></div>Trajetória (RK4)</div>
           <div class="li"><div class="ld" style="background:var(--warn)"></div>Ponto atual</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ctitle">Potência Média — P(ω)</div>
+        <canvas id="powerCanvas" width="400" height="140" style="width:100%;"></canvas>
+        <div class="leg">
+          <div class="li"><div class="ld" style="background:var(--c-power)"></div>P(ω) teórica</div>
+          <div class="li"><div class="ld" style="background:var(--warn)"></div>Ponto de operação</div>
         </div>
       </div>
     </div>
@@ -139,35 +167,35 @@
         <div class="ctitle">x(t) — Deslocamento vs Tempo</div>
         <canvas id="timeCanvas" width="400" height="145" style="width:100%;"></canvas>
         <div class="leg">
-          <div class="li"><div class="ld" style="background:var(--accent2)"></div>x(t) RK4</div>
-          <div class="li"><div class="ld" style="background:var(--accent3); border-style:dashed;"></div>Estacionária (Analítica)</div>
-          <div class="li" id="legEuler" style="display:none;"><div class="ld" style="background:red; border-style:dashed;"></div>x(t) Euler (Erro Numérico)</div>
+          <div class="li"><div class="ld" style="background:var(--c-time)"></div>x(t) RK4</div>
+          <div class="li"><div class="ld" style="background:rgba(255,255,255,0.7); border-style:dashed;"></div>Estacionária</div>
+          <div class="li" id="legEuler" style="display:none;"><div class="ld" style="background:red; border-style:dashed;"></div>x(t) Euler</div>
         </div>
       </div>
+      
       <div class="card">
         <div class="ctitle">Gráfico de Energias no Tempo</div>
         <canvas id="energyTimeCanvas" width="400" height="135" style="width:100%;"></canvas>
         <div class="leg">
-          <div class="li"><div class="ld" style="background:var(--warn)"></div>Cinética (Ec)</div>
-          <div class="li"><div class="ld" style="background:var(--accent)"></div>Potencial (Ep)</div>
-          <div class="li"><div class="ld" style="background:var(--accent3)"></div>Mecânica Total (Et)</div>
+          <div class="li"><div class="ld" style="background:var(--c-ek)"></div>Cinética (Ec)</div>
+          <div class="li"><div class="ld" style="background:var(--c-ep)"></div>Potencial (Ep)</div>
+          <div class="li"><div class="ld" style="background:var(--c-et)"></div>Total (Et)</div>
         </div>
       </div>
+      
       <div class="card">
         <div class="ctitle">Curva de Ressonância — A(ω)</div>
         <canvas id="resonCanvas" width="400" height="140" style="width:100%;"></canvas>
         <div class="leg">
-          <div class="li"><div class="ld" style="background:var(--accent2)"></div>A(ω) teórica</div>
-          <div class="li"><div class="ld" style="background:var(--accent3)"></div>ω₀ natural</div>
+          <div class="li"><div class="ld" style="background:var(--c-reson)"></div>A(ω) teórica</div>
           <div class="li"><div class="ld" style="background:var(--warn)"></div>Ponto de operação</div>
         </div>
       </div>
     </div>
 
     <div class="scol" id="panelControls">
-
       <div class="card">
-        <div class="ctitle">Controlos & Ferramentas</div>
+        <div class="ctitle">Controles & Ferramentas</div>
         <div class="br" style="margin-bottom:0.7rem;">
           <button id="btnPlay" class="on">Pausar</button>
           <button id="btnReset">Reiniciar</button>
@@ -214,7 +242,7 @@
           <input type="range" id="sWf" min="0.1" max="15.0" step="0.05" value="3.16">
         </div>
         <div style="font-size:0.61rem;font-family:'Space Mono',monospace;color:var(--text2);margin-top:0.3rem;">
-          ω₀ atual: <span id="w0display" style="color:var(--accent3)">—</span>
+          ω₀ atual: <span id="w0display" style="color:var(--c-reson)">—</span>
         </div>
         <div class="badge res-badge" id="resBadge">⚡ RESSONÂNCIA DETECTADA</div>
       </div>
@@ -222,14 +250,25 @@
       <div class="card">
         <div class="ctitle">Fórmulas Físicas</div>
         <div class="eq-panel" style="line-height: 1.2;">
-          <span>Equação diferencial:</span>
-          \[ x'' + 2\beta x' + \omega_0^2 x = \frac{F_0}{m} \cos(\omega t) \]
-          <span style="margin-top: 1rem;">Amplitude estacionária:</span>
-          \[ A(\omega) = \frac{\frac{F_0}{m}}{\sqrt{(\omega_0^2 - \omega^2)^2 + (2\beta\omega)^2}} \]
-          <span style="margin-top: 1rem;">Potência média:</span>
-          \[ P = \frac{\frac{F_0^2}{2m} \cdot \beta \cdot \omega^2}{(\omega_0^2 - \omega^2)^2 + (2\beta\omega)^2} \]
+          <span>Força Externa e Equação de Movimento:</span>
+          \[ F_{ext}(t) = F_0 \cos(\omega t) \]
+          \[ m\ddot{x} + b\dot{x} + kx = F_{ext}(t) \]
+          \[ x_p(t) = A \cos(\omega t - \phi) \]
+          
+          <span style="margin-top: 1rem;">Parâmetros Naturais:</span>
+          \[ \omega_0 = \sqrt{\frac{k}{m}} \quad \text{e} \quad \beta = \frac{b}{2m} \]
+          
+          <span style="margin-top: 1rem;">Fator de Qualidade (Q):</span>
+          \[ Q = \frac{\omega_0}{2\beta} = \frac{\sqrt{mk}}{b} \]
+          
+          <span style="margin-top: 1rem;">Amplitude Estacionária:</span>
+          \[ A(\omega) = \frac{F_0 / m}{\sqrt{(\omega_0^2 - \omega^2)^2 + (2\beta\omega)^2}} \]
+          
           <span style="margin-top: 1rem;">Defasagem:</span>
           \[ \varphi = \arctan\left(\frac{2\beta\omega}{\omega_0^2 - \omega^2}\right) \]
+          
+          <span style="margin-top: 1rem;">Potência Média:</span>
+          \[ P = \frac{\frac{F_0^2}{2m} \cdot \beta \cdot \omega^2}{(\omega_0^2 - \omega^2)^2 + (2\beta\omega)^2} \]
         </div>
       </div>
     </div>
@@ -268,14 +307,35 @@
   const timeCanvas = document.getElementById('timeCanvas'), tC = timeCanvas.getContext('2d');
   const resonCanvas = document.getElementById('resonCanvas'), rC = resonCanvas.getContext('2d');
   const phaseCanvas = document.getElementById('phaseCanvas'), phC = phaseCanvas.getContext('2d');
+  const powerCanvas = document.getElementById('powerCanvas'), pC = powerCanvas.getContext('2d');
   const energyCanvas= document.getElementById('energyTimeCanvas'), eC = energyCanvas.getContext('2d');
 
   // Funções físicas
   function w0()    { return Math.sqrt(k / m); }
   function beta()  { return b / (2 * m); }
   function phi()   { return Math.atan2(2 * beta() * wf, w0() * w0() - wf * wf); }
-  function Aanalytic(w) { const wn = w0(), bt = beta(); const den = Math.sqrt(Math.pow(wn * wn - w * w, 2) + Math.pow(2 * bt * w, 2)); return den > 1e-9 ? (F0 / m) / den : 1e6; }
-  function Amax()  { const wn = w0(), bt = beta(); const val = wn*wn - 2*bt*bt; const wr = val > 0 ? Math.sqrt(val) : 0; return wr > 0 ? Aanalytic(wr) : Aanalytic(w0()); }
+  
+  // Amplitude Teórica
+  function Aanalytic(w) { 
+      const wn = w0(), bt = beta(); 
+      const den = Math.sqrt(Math.pow(wn * wn - w * w, 2) + Math.pow(2 * bt * w, 2)); 
+      return den > 1e-9 ? (F0 / m) / den : 1e6; 
+  }
+  
+  // Potência Média Teórica P(w)
+  function Pavg(w) {
+      const wn = w0(), bt = beta();
+      const den = Math.pow(wn*wn - w*w, 2) + Math.pow(2*bt*w, 2);
+      return den > 1e-9 ? ( (F0*F0)/(2*m) * bt * w*w ) / den : 0;
+  }
+
+  function Amax()  { 
+      const wn = w0(), bt = beta(); 
+      const val = wn*wn - 2*bt*bt; 
+      const wr = val > 0 ? Math.sqrt(val) : 0; 
+      return wr > 0 ? Aanalytic(wr) : Aanalytic(w0()); 
+  }
+  
   function steadyX(ti) { return Aanalytic(wf) * Math.cos(wf * ti - phi()); }
 
   // Atualizar Variáveis
@@ -285,21 +345,16 @@
   document.getElementById('sF0').addEventListener('input', function() { F0 = parseFloat(this.value); updateUI(); });
   document.getElementById('sWf').addEventListener('input', function() { wf = parseFloat(this.value); updateUI(); });
 
-  // Controlos de Simulação Extras
   document.getElementById('sSpeed').addEventListener('input', function() {
     simSpeed = parseFloat(this.value); document.getElementById('vSpeed').textContent = simSpeed.toFixed(1) + 'x';
   });
 
-  // Ativar Euler e sincronizar
   document.getElementById('cbEuler').addEventListener('change', function() {
     useEuler = this.checked;
     document.getElementById('legEuler').style.display = useEuler ? 'flex' : 'none';
-    if(useEuler) {
-      xE = x; vE = v;
-    }
+    if(useEuler) { xE = x; vE = v; }
   });
 
-  // Botões
   document.getElementById('btnPlay').addEventListener('click', function() { running = !running; this.textContent = running ? 'Pausar' : 'Continuar'; this.classList.toggle('on', running); });
   document.getElementById('btnReset').addEventListener('click', function() {
     x = 0; v = 0; t = 0; xE = 0; vE = 0;
@@ -308,7 +363,6 @@
     ampEstimate = 0; etMaxObs = 0;
   });
 
-  // Exportar CSV
   document.getElementById('btnExport').addEventListener('click', function() {
     if(recordData.length === 0) { alert("Nenhum dado para exportar ainda!"); return; }
     let csv = "Tempo (s),Posicao x (m),Velocidade v (m/s),Energia Total (J)\n";
@@ -317,7 +371,6 @@
     const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "dados_oscilador.csv"; link.click();
   });
 
-  // Atualização da Interface Visual
   function updateUI() {
     const fHz = wf / (2 * Math.PI); const f0Hz = w0() / (2 * Math.PI); const phDeg = phi() * 180 / Math.PI;
 
@@ -332,7 +385,6 @@
     document.getElementById('resBadge').classList.toggle('show', isRes);
   }
 
-  // Drag & Drop
   animCanvas.addEventListener('mousedown', function(e) {
     const rect = animCanvas.getBoundingClientRect(), cx = animCanvas.width / 2, massY = animCanvas.height / 2, massR = 22;
     const maxAmp = Math.max(Aanalytic(wf)*1.1, Math.abs(x)*1.2, 0.5), xScale = Math.min((animCanvas.width - 75 - 60) / (2 * maxAmp), 60);
@@ -345,6 +397,7 @@
       histX = []; histSteady = []; histEuler = []; phaseHist = []; histEk = []; histEp = []; histEt = []; t = 0;
     }
   });
+  
   animCanvas.addEventListener('mousemove', function(e) {
     if (!isDragging) return;
     const cx = animCanvas.width / 2, maxAmp = Math.max(Aanalytic(wf)*1.1, Math.abs(x)*1.2, 0.5);
@@ -353,9 +406,9 @@
     v = 0; xE = x; vE = 0;
     drawAnim(); document.getElementById('mX').textContent = x.toFixed(3) + ' m'; document.getElementById('mV').textContent = v.toFixed(3) + ' m/s';
   });
+  
   window.addEventListener('mouseup', function() { if (isDragging) { isDragging = false; animCanvas.style.cursor = 'grab'; } });
 
-  // Integração RK4
   function deriv(xi, vi, ti) { return { dx: vi, dv: -(2 * beta()) * vi - w0() * w0() * xi + (F0 / m) * Math.cos(wf * ti) }; }
   function rk4(xi, vi, ti, dt) {
     const k1 = deriv(xi, vi, ti); const k2 = deriv(xi + dt/2*k1.dx, vi + dt/2*k1.dv, ti + dt/2);
@@ -363,12 +416,15 @@
     return { x: xi + dt/6*(k1.dx + 2*k2.dx + 2*k3.dx + k4.dx), v: vi + dt/6*(k1.dv + 2*k2.dv + 2*k3.dv + k4.dv) };
   }
 
-  // Resize (Responsivo)
   function resizeAll() {
     const w1 = animCanvas.parentElement.clientWidth - 42;
-    animCanvas.width=w1; timeCanvas.width=w1; resonCanvas.width=w1; phaseCanvas.width=w1; energyCanvas.width=w1;
+    animCanvas.width=w1; timeCanvas.width=w1; resonCanvas.width=w1; phaseCanvas.width=w1; powerCanvas.width=w1; energyCanvas.width=w1;
   }
   resizeAll(); window.addEventListener('resize', resizeAll);
+
+  function getTextColor() {
+      return document.body.classList.contains('light-mode') ? '#666666' : '#8888aa';
+  }
 
   // ================= RENDERIZAÇÕES =================
   function drawAnim() {
@@ -396,22 +452,18 @@
     for (let i=0; i<=4; i++) { tC.beginPath(); tC.moveTo(0, H/4*i); tC.lineTo(W, H/4*i); tC.strokeStyle=grid; tC.stroke(); }
     if (histX.length < 2) return;
 
-    // Escala fixada no RK4 e Estacionária. O Euler vai sair dos limites se o erro for grande!
     let allVals = [...histX.map(Math.abs), ...histSteady.map(Math.abs)];
     const maxA = Math.max(...allVals, 0.1) * 1.1;
     function ty(val) { return H/2 - (val / maxA) * (H/2 - 8); }
 
-    // 1. Estacionária (A Verde Menta Clara por trás)
     if (histSteady.length > 1) {
-      tC.beginPath(); tC.strokeStyle = 'rgba(107, 255, 208, 0.9)'; tC.lineWidth = 2.0; tC.setLineDash([5,5]);
+      tC.beginPath(); tC.strokeStyle = 'rgba(255, 255, 255, 0.4)'; tC.lineWidth = 2.0; tC.setLineDash([5,5]);
       histSteady.forEach((hs, i) => i===0 ? tC.moveTo(i/(HIST-1)*W, ty(hs)) : tC.lineTo(i/(HIST-1)*W, ty(hs))); tC.stroke(); tC.setLineDash([]);
     }
 
-    // 2. RK4 Real (A Rosa no Meio)
     tC.beginPath(); tC.strokeStyle = '#ff6b9d'; tC.lineWidth = 2.5;
     histX.forEach((hx, i) => i===0 ? tC.moveTo(i/(HIST-1)*W, ty(hx)) : tC.lineTo(i/(HIST-1)*W, ty(hx))); tC.stroke();
 
-    // 3. Método de Euler (A Vermelha por Cima para mostrar a divergência)
     if (useEuler && histEuler.length > 1) {
       tC.beginPath(); tC.strokeStyle = 'rgba(255, 50, 50, 1)'; tC.lineWidth = 2.5; tC.setLineDash([4,4]);
       let first = true;
@@ -424,15 +476,24 @@
       });
       tC.stroke(); tC.setLineDash([]);
     }
+
+    tC.fillStyle = getTextColor(); tC.font = '10px "Space Mono"';
+    tC.fillText(maxA.toFixed(2) + ' m', 5, 12);
+    tC.fillText((-maxA).toFixed(2) + ' m', 5, H - 5);
   }
 
   function drawEnergyChart() {
     const W = energyCanvas.width, H = energyCanvas.height; eC.clearRect(0, 0, W, H);
     if (histEt.length < 2) return;
     const maxE = Math.max(etMaxObs, 0.1) * 1.1; function ey(val) { return H - 5 - (val / maxE) * (H - 10); }
-    eC.beginPath(); eC.strokeStyle = '#6bffd0'; eC.lineWidth = 2; histEt.forEach((e, i) => i===0 ? eC.moveTo(i/(HIST-1)*W, ey(e)) : eC.lineTo(i/(HIST-1)*W, ey(e))); eC.stroke();
+    
+    eC.beginPath(); eC.strokeStyle = '#00ffaa'; eC.lineWidth = 2; histEt.forEach((e, i) => i===0 ? eC.moveTo(i/(HIST-1)*W, ey(e)) : eC.lineTo(i/(HIST-1)*W, ey(e))); eC.stroke();
     eC.beginPath(); eC.strokeStyle = '#ffb347'; eC.lineWidth = 1.5; histEk.forEach((e, i) => i===0 ? eC.moveTo(i/(HIST-1)*W, ey(e)) : eC.lineTo(i/(HIST-1)*W, ey(e))); eC.stroke();
-    eC.beginPath(); eC.strokeStyle = '#7c6bff'; eC.lineWidth = 1.5; histEp.forEach((e, i) => i===0 ? eC.moveTo(i/(HIST-1)*W, ey(e)) : eC.lineTo(i/(HIST-1)*W, ey(e))); eC.stroke();
+    eC.beginPath(); eC.strokeStyle = '#33aaff'; eC.lineWidth = 1.5; histEp.forEach((e, i) => i===0 ? eC.moveTo(i/(HIST-1)*W, ey(e)) : eC.lineTo(i/(HIST-1)*W, ey(e))); eC.stroke();
+
+    eC.fillStyle = getTextColor(); eC.font = '10px "Space Mono"';
+    eC.fillText(maxE.toFixed(2) + ' J', 5, 12);
+    eC.fillText('0.00 J', 5, H - 5);
   }
 
   function drawResonCurve() {
@@ -440,18 +501,53 @@
     const wMax = Math.max(w0() * 3.5, wf * 1.6, 10), capA = Amax() * 2.8, aArr = Array.from({length: 200}, (_, i) => Math.min(Aanalytic(i/200 * wMax), capA));
     const maxA = Math.max(...aArr, 0.1); function toX(w) { return w/wMax * (W-40) + 20; } function toY(a) { return H - 18 - (a/maxA) * (H-32); }
 
-    rC.beginPath(); rC.strokeStyle = '#ff6b9d'; rC.lineWidth = 2.5; aArr.forEach((a, i) => i===0 ? rC.moveTo(toX(0), toY(a)) : rC.lineTo(toX(i/200*wMax), toY(a))); rC.stroke();
-    rC.beginPath(); rC.moveTo(toX(w0()), 16); rC.lineTo(toX(w0()), H-18); rC.strokeStyle = '#6bffd0'; rC.setLineDash([3,3]); rC.stroke(); rC.setLineDash([]);
+    rC.beginPath(); rC.strokeStyle = '#f9e076'; rC.lineWidth = 2.5; aArr.forEach((a, i) => i===0 ? rC.moveTo(toX(0), toY(a)) : rC.lineTo(toX(i/200*wMax), toY(a))); rC.stroke();
+    rC.beginPath(); rC.moveTo(toX(w0()), 16); rC.lineTo(toX(w0()), H-18); rC.strokeStyle = document.body.classList.contains('light-mode') ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)'; rC.setLineDash([3,3]); rC.stroke(); rC.setLineDash([]);
     rC.beginPath(); rC.arc(toX(wf), toY(Math.min(Aanalytic(wf), capA)), 4, 0, 2*Math.PI); rC.fillStyle = '#ffb347'; rC.fill();
+
+    rC.fillStyle = getTextColor(); rC.font = '10px "Space Mono"';
+    rC.fillText(maxA.toFixed(2) + ' m', 5, 12);
+    rC.fillText('0.00 m', 5, H - 5);
+    rC.fillText(wMax.toFixed(1) + ' rad/s', W - 65, H - 5);
+  }
+
+  function drawPowerChart() {
+    const W = powerCanvas.width, H = powerCanvas.height; pC.clearRect(0, 0, W, H);
+    const wMax = Math.max(w0() * 3.5, wf * 1.6, 10);
+    const pArr = Array.from({length: 200}, (_, i) => Pavg(i/200 * wMax));
+    const maxP = Math.max(...pArr, 0.1); 
+    function toX(w) { return w/wMax * (W-40) + 20; } 
+    function toY(p) { return H - 18 - (p/maxP) * (H-32); }
+
+    pC.beginPath(); pC.strokeStyle = '#00e5ff'; pC.lineWidth = 2.5; 
+    pArr.forEach((p, i) => i===0 ? pC.moveTo(toX(0), toY(p)) : pC.lineTo(toX(i/200*wMax), toY(p))); pC.stroke();
+    
+    pC.beginPath(); pC.moveTo(toX(w0()), 16); pC.lineTo(toX(w0()), H-18); pC.strokeStyle = document.body.classList.contains('light-mode') ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)'; pC.setLineDash([3,3]); pC.stroke(); pC.setLineDash([]);
+    pC.beginPath(); pC.arc(toX(wf), toY(Pavg(wf)), 4, 0, 2*Math.PI); pC.fillStyle = '#ffb347'; pC.fill();
+
+    pC.fillStyle = getTextColor(); pC.font = '10px "Space Mono"';
+    pC.fillText(maxP.toFixed(2) + ' W', 5, 12);
+    pC.fillText('0.00 W', 5, H - 5);
+    pC.fillText(wMax.toFixed(1) + ' rad/s', W - 65, H - 5);
   }
 
   function drawPhase() {
     const W = phaseCanvas.width, H = phaseCanvas.height; phC.clearRect(0, 0, W, H); const cx = W/2, cy = H/2;
     phC.beginPath(); phC.moveTo(0, cy); phC.lineTo(W, cy); phC.moveTo(cx, 0); phC.lineTo(cx, H); phC.strokeStyle = 'rgba(136,136,170,0.3)'; phC.stroke();
     if (phaseHist.length < 2) return;
-    const sx = (W/2 - 10) / Math.max(...phaseHist.map(p=>Math.abs(p[0])), 0.1), sv = (H/2 - 10) / Math.max(...phaseHist.map(p=>Math.abs(p[1])), 0.1);
-    phC.beginPath(); phC.strokeStyle = 'rgba(255,107,157,0.8)'; phC.lineWidth = 1.5; phaseHist.forEach((p, i) => i===0 ? phC.moveTo(cx+p[0]*sx, cy-p[1]*sv) : phC.lineTo(cx+p[0]*sx, cy-p[1]*sv)); phC.stroke();
+    
+    const maxAbsX = Math.max(...phaseHist.map(p=>Math.abs(p[0])), 0.1);
+    const maxAbsV = Math.max(...phaseHist.map(p=>Math.abs(p[1])), 0.1);
+    const sx = (W/2 - 15) / maxAbsX, sv = (H/2 - 15) / maxAbsV;
+    
+    phC.beginPath(); phC.strokeStyle = '#b28dff'; phC.lineWidth = 1.5; phaseHist.forEach((p, i) => i===0 ? phC.moveTo(cx+p[0]*sx, cy-p[1]*sv) : phC.lineTo(cx+p[0]*sx, cy-p[1]*sv)); phC.stroke();
     phC.beginPath(); phC.arc(cx+x*sx, cy-v*sv, 3, 0, 2*Math.PI); phC.fillStyle = '#ffb347'; phC.fill();
+
+    phC.fillStyle = getTextColor(); phC.font = '10px "Space Mono"';
+    phC.fillText(maxAbsV.toFixed(2) + ' m/s', cx + 5, 12);
+    phC.fillText((-maxAbsV).toFixed(2) + ' m/s', cx + 5, H - 5);
+    phC.fillText(maxAbsX.toFixed(2) + ' m', W - 45, cy - 5);
+    phC.fillText((-maxAbsX).toFixed(2) + ' m', 5, cy - 5);
   }
 
   // Engine Loop Principal
@@ -463,7 +559,6 @@
     if (running && !isDragging) {
       const dt = dtReal * simSpeed;
 
-      // O Euler usa um passo MAIOR (o dt completo) para forçar o erro numérico a aparecer em relação ao RK4
       if (useEuler) {
         let acc = -(2 * beta()) * vE - w0() * w0() * xE + (F0 / m) * Math.cos(wf * t);
         let next_xE = xE + vE * dt;
@@ -472,7 +567,6 @@
       }
 
       const steps = 12, dts = dt / steps;
-      // O RK4 usa 12 mini-passos para ser absurdamente perfeito
       for (let i = 0; i < steps; i++) {
         const r = rk4(x, v, t, dts); x = r.x; v = r.v;
         t += dts;
@@ -503,7 +597,7 @@
       ampEstimate *= 0.9999;
     }
 
-    drawAnim(); drawTime(); drawEnergyChart(); drawResonCurve(); drawPhase();
+    drawAnim(); drawTime(); drawEnergyChart(); drawResonCurve(); drawPowerChart(); drawPhase();
     requestAnimationFrame(loop);
   }
 
