@@ -4,464 +4,89 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulador de Oscilador Harmônico - UCS</title>
-    
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-primary: #f8fafc;
-            --accent: #38bdf8;
-            --euler-color: #ef4444;
-            --rk4-color: #ec4899;
-            --steady-color: #2dd4bf;
-        }
+        body { font-family: sans-serif; margin: 20px; background-color: #f0f2f5; color: #333; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        
+        /* Layout principal */
+        .main-layout { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        .controls { flex: 1; min-width: 300px; max-width: 400px; }
+        .simulation { flex: 2; min-width: 400px; }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
+        canvas { background: #eee; border: 1px solid #ccc; width: 100%; height: 300px; border-radius: 4px; }
+        
+        .control-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input[type="range"] { width: 100%; }
+        .value-label { color: #007bff; font-weight: bold; }
 
-        .header {
-            text-align: center;
-            padding: 20px;
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            width: 100%;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        button { flex: 1; padding: 12px; cursor: pointer; border: none; border-radius: 4px; font-weight: bold; transition: 0.2s; }
+        .btn-play { background: #28a745; color: white; }
+        .btn-reset { background: #dc3545; color: white; }
+        .btn-export { background: #6c757d; color: white; margin-top: 10px; width: 100%; }
+        
+        #btnMobile { display: none; width: 100%; background: #007bff; color: white; margin-bottom: 10px; }
 
-        .container {
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 20px;
-            padding: 20px;
-            max-width: 1400px;
-            width: 100%;
-            box-sizing: border-box;
-        }
+        .resonance-msg { color: red; font-weight: bold; text-align: center; height: 20px; margin-bottom: 10px; }
 
-        /* Menu de Controles */
-        .controls {
-            background: var(--card-bg);
-            padding: 25px;
-            border-radius: 16px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            height: fit-content;
-        }
-
-        /* Botão para Celular */
-        #btnMobile {
-            display: none;
-            width: 90%;
-            padding: 15px;
-            margin: 10px 0;
-            background: var(--accent);
-            border: none;
-            border-radius: 8px;
-            color: var(--bg-color);
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .control-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: #94a3b8; }
-        input[type="range"] { width: 100%; accent-color: var(--accent); }
-        .val-display { color: var(--accent); font-weight: bold; float: right; }
-
-        /* Área Visual */
-        .main-content { display: flex; flex-direction: column; gap: 20px; }
-        .canvas-container {
-            background: #000;
-            border-radius: 16px;
-            position: relative;
-            overflow: hidden;
-            height: 350px;
-            border: 1px solid #334155;
-        }
-
-        canvas { width: 100%; height: 100%; }
-
-        .charts-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .chart-card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 10px;
-            height: 300px;
-        }
-
-        .button-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        button {
-            padding: 12px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            transition: transform 0.1s;
-        }
-
-        button:active { transform: scale(0.95); }
-        .btn-primary { background: var(--accent); color: #000; }
-        .btn-danger { background: #334155; color: white; }
-
-        .resonance-alert {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(239, 68, 68, 0.9);
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            display: none;
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-
-        @media (max-width: 900px) {
-            .container { grid-template-columns: 1fr; }
-            .charts-grid { grid-template-columns: 1fr; }
-            #btnMobile { display: block; margin: 10px auto; }
-            .controls { display: none; } /* Esconde por padrão no mobile */
+        @media (max-width: 600px) {
+            #btnMobile { display: block; }
+            .controls { display: none; } /* Começa escondido no celular */
+            .simulation { min-width: 100%; }
         }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1 style="margin:0; font-size: 1.5rem;">Simulador de Oscilador Harmônico Forçado</h1>
-    <p style="color: var(--accent); margin: 5px 0;">Engenharia da Computação - UCS | Renan Champe Corrêa</p>
-    <div id="math-display" style="font-size: 0.9rem; margin-top:10px;">
-        $$m\ddot{x} + b\dot{x} + kx = F_0 \cos(\omega t)$$
-    </div>
+    <h1>Simulador de Oscilador Harmônico Forçado</h1>
+    <p>Engenharia da Computação - UCS | <strong>Renan Champe Corrêa</strong></p>
+    <div>$$m\ddot{x} + b\dot{x} + kx = F_0 \cos(\omega t)$$</div>
 </div>
 
 <button id="btnMobile">Mostrar Controles da Simulação</button>
 
-<div class="container">
-    <div class="controls" id="controlsPanel">
+<div class="main-layout">
+    <div class="controls card" id="controlsPanel">
         <div class="control-group">
-            <label>Massa (m): <span class="val-display" id="mVal">1.0</span> kg</label>
+            <label>Massa (m): <span id="mVal" class="value-label">1.0</span> kg</label>
             <input type="range" id="m" min="0.5" max="5" step="0.1" value="1">
         </div>
         <div class="control-group">
-            <label>Amortecimento (b): <span class="val-display" id="bVal">0.2</span> kg/s</label>
+            <label>Amortecimento (b): <span id="bVal" class="value-label">0.2</span> kg/s</label>
             <input type="range" id="b" min="0" max="2" step="0.05" value="0.2">
         </div>
         <div class="control-group">
-            <label>Constante Elástica (k): <span class="val-display" id="kVal">10.0</span> N/m</label>
+            <label>Constante Elástica (k): <span id="kVal" class="value-label">10.0</span> N/m</label>
             <input type="range" id="k" min="1" max="50" step="1" value="10">
         </div>
         <div class="control-group">
-            <label>Freq. Forçante (ω): <span class="val-display" id="wfVal">3.16</span> rad/s</label>
+            <label>Freq. Forçante (ω): <span id="wfVal" class="value-label">3.16</span> rad/s</label>
             <input type="range" id="wf" min="0.1" max="10" step="0.1" value="3.16">
         </div>
-        <div class="control-group">
-            <label>Velocidade do Tempo: <span class="val-display" id="speedVal">1.0</span>x</label>
-            <input type="range" id="simSpeed" min="0.1" max="2" step="0.1" value="1">
+        
+        <hr>
+        <label><input type="checkbox" id="useEuler"> Comparar com Método de Euler</label>
+        
+        <div class="btn-group">
+            <button class="btn-play" id="playPause">Pausar</button>
+            <button class="btn-reset" id="reset">Resetar</button>
         </div>
-
-        <div style="margin: 20px 0; padding: 10px; border: 1px solid #334155; border-radius: 8px;">
-            <label style="display: flex; align-items: center; cursor:pointer;">
-                <input type="checkbox" id="useEuler" style="margin-right:10px;"> 
-                Comparar com Método de Euler
-            </label>
-            <p style="font-size: 0.75rem; color: #64748b; margin: 5px 0 0 25px;">
-                Mostra a instabilidade numérica (linha vermelha).
-            </p>
-        </div>
-
-        <div class="button-grid">
-            <button class="btn-primary" id="playPause">Pausar</button>
-            <button class="btn-danger" id="reset">Resetar</button>
-        </div>
-        <button class="btn-primary" id="exportCSV" style="width:100%; margin-top:10px; background: #22c55e;">Exportar Dados CSV</button>
+        <button class="btn-export" id="exportCSV">Exportar Dados CSV</button>
     </div>
 
-    <div class="main-content">
-        <div class="canvas-container">
-            <div id="resAlert" class="resonance-alert">Ressonância Detectada!</div>
-            <canvas id="canvas"></canvas>
-            <div style="position: absolute; bottom: 10px; left: 10px; font-size: 0.8rem; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 4px;">
-                <span style="color: var(--rk4-color)">● RK4 (Real)</span> | 
-                <span style="color: var(--steady-color)">-- Estacionária</span> |
-                <span id="legendaEuler" style="color: var(--euler-color); display:none;">● Euler</span>
-            </div>
-        </div>
-
-        <div class="charts-grid">
-            <div id="energyChart" class="chart-card"></div>
-            <div id="resonChart" class="chart-card"></div>
-            <div id="phaseChart" class="chart-card" style="grid-column: span 2;"></div>
-        </div>
+    <div class="simulation card">
+        <div id="resAlert" class="resonance-msg"></div>
+        <canvas id="canvas"></canvas>
+        <div id="graph" style="width:100%; height:400px; margin-top:20px;"></div>
     </div>
 </div>
 
 <script>
-    // Configurações e Variáveis de Estado
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    let running = true;
-    let t = 0;
-    let recordData = [];
-
-    // Parâmetros Físicos
-    let m = 1.0, b = 0.2, k = 10.0, F0 = 5.0, wf = 3.16;
-    let x = 1.5, v = 0; // RK4
-    let xE = 1.5, vE = 0; // Euler
-    
-    // Histórico para gráficos
-    let histX = [], histSteady = [], histEuler = [], histEk = [], histEp = [], histEt = [], histT = [];
-    let phaseHist = [];
-    const HIST_SIZE = 500;
-
-    // Elementos da UI
-    const inputs = ['m', 'b', 'k', 'wf', 'simSpeed'];
-    inputs.forEach(id => {
-        document.getElementById(id).addEventListener('input', (e) => {
-            window[id] = parseFloat(e.target.value);
-            document.getElementById(id + 'Val').textContent = window[id].toFixed(2);
-            if(id === 'k' || id === 'm' || id === 'b') calcResonanceCurve();
-        });
-    });
-
-    // Lógica do Botão Mobile (CORRIGIDA)
-    const btnMobile = document.getElementById('btnMobile');
-    const controlsPanel = document.getElementById('controlsPanel');
-    btnMobile.addEventListener('click', () => {
-        if (controlsPanel.style.display === 'block') {
-            controlsPanel.style.display = 'none';
-            btnMobile.textContent = 'Mostrar Controles da Simulação';
-        } else {
-            controlsPanel.style.display = 'block';
-            btnMobile.textContent = 'Esconder Controles';
-        }
-    });
-
-    // Equação Diferencial: a = (F0*cos(wf*t) - b*v - k*x) / m
-    function getAcc(px, pv, pt) {
-        return (F0 * Math.cos(wf * pt) - b * pv - k * px) / m;
-    }
-
-    // Método Runge-Kutta 4ª Ordem
-    function rk4Step(px, pv, pt, dt) {
-        let k1x = pv;
-        let k1v = getAcc(px, pv, pt);
-
-        let k2x = pv + 0.5 * dt * k1v;
-        let k2v = getAcc(px + 0.5 * dt * k1x, pv + 0.5 * dt * k1v, pt + 0.5 * dt);
-
-        let k3x = pv + 0.5 * dt * k2v;
-        let k3v = getAcc(px + 0.5 * dt * k2x, pv + 0.5 * dt * k2v, pt + 0.5 * dt);
-
-        let k4x = pv + dt * k3v;
-        let k4v = getAcc(px + dt * k3x, pv + dt * k3v, pt + dt);
-
-        return {
-            x: px + (dt / 6) * (k1x + 2 * k2x + 2 * k3x + k4x),
-            v: pv + (dt / 6) * (k1v + 2 * k2v + 2 * k3v + k4v)
-        };
-    }
-
-    // Solução Estacionária Analítica
-    function getSteadyX(pt) {
-        const wn = Math.sqrt(k / m);
-        const denom = Math.sqrt(Math.pow(k - m * wf * wf, 2) + Math.pow(b * wf, 2));
-        const A = F0 / denom;
-        const phi = Math.atan2(b * wf, k - m * wf * wf);
-        return A * Math.cos(wf * pt - phi);
-    }
-
-    function loop() {
-        if (!running) return;
-
-        const dt = 0.016 * parseFloat(document.getElementById('simSpeed').value);
-        
-        // Update Física (RK4)
-        const next = rk4Step(x, v, t, dt);
-        x = next.x; v = next.v;
-
-        // Update Euler (se ativo)
-        if(document.getElementById('useEuler').checked) {
-            let accE = getAcc(xE, vE, t);
-            vE += accE * dt;
-            xE += vE * dt;
-            document.getElementById('legendaEuler').style.display = 'inline';
-        } else {
-            xE = x; vE = v;
-            document.getElementById('legendaEuler').style.display = 'none';
-        }
-
-        t += dt;
-
-        // Energias
-        let Ek = 0.5 * m * v * v;
-        let Ep = 0.5 * k * x * x;
-        
-        // Históricos
-        histX.push(x);
-        histSteady.push(getSteadyX(t));
-        histEuler.push(document.getElementById('useEuler').checked ? xE : null);
-        histEk.push(Ek); histEp.push(Ep); histEt.push(Ek + Ep);
-        histT.push(t);
-        phaseHist.push({x: x, v: v});
-
-        if(histX.length > HIST_SIZE) {
-            histX.shift(); histSteady.shift(); histEuler.shift();
-            histEk.shift(); histEp.shift(); histEt.shift(); histT.shift();
-        }
-        if(phaseHist.length > 300) phaseHist.shift();
-
-        // Alerta de Ressonância
-        const wn = Math.sqrt(k/m);
-        document.getElementById('resAlert').style.display = Math.abs(wf - wn) < 0.2 ? 'block' : 'none';
-
-        draw();
-        if(t % 0.5 < 0.02) updateCharts();
-        
-        requestAnimationFrame(loop);
-    }
-
-    function draw() {
-        canvas.width = canvas.offsetWidth;
-        canvas.height = canvas.offsetHeight;
-        const cx = canvas.width / 2;
-        const cy = canvas.height / 2;
-        const scale = 50;
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Desenha Mola
-        ctx.strokeStyle = '#64748b';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, cy);
-        for(let i=0; i<cx + x*scale; i += 5) {
-            ctx.lineTo(i, cy + Math.sin(i*0.2) * 10);
-        }
-        ctx.stroke();
-
-        // Massa RK4 (Rosa)
-        ctx.fillStyle = '#ec4899';
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = '#ec4899';
-        ctx.fillRect(cx + x * scale - 20, cy - 20, 40, 40);
-
-        // Indicador de Solução Estacionária (Verde Menta)
-        ctx.setLineDash([5, 5]);
-        ctx.strokeStyle = '#2dd4bf';
-        ctx.beginPath();
-        ctx.moveTo(cx + getSteadyX(t) * scale, cy - 40);
-        ctx.lineTo(cx + getSteadyX(t) * scale, cy + 40);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // Massa Euler (Vermelho) - se ativo
-        if(document.getElementById('useEuler').checked) {
-            ctx.fillStyle = '#ef4444';
-            ctx.shadowColor = '#ef4444';
-            ctx.globalAlpha = 0.6;
-            ctx.beginPath();
-            ctx.arc(cx + xE * scale, cy, 15, 0, Math.PI*2);
-            ctx.fill();
-            ctx.globalAlpha = 1.0;
-        }
-        
-        ctx.shadowBlur = 0;
-    }
-
-    // Gráficos com Plotly
-    function initCharts() {
-        const layout = {
-            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-            margin: {t:30, l:40, r:10, b:30},
-            font: {color: '#94a3b8', size: 10},
-            showlegend: true, legend: {orientation: 'h', y: 1.1}
-        };
-
-        Plotly.newPlot('energyChart', [
-            {y: [], name: 'Cinética', line: {color: '#38bdf8'}},
-            {y: [], name: 'Potencial', line: {color: '#fbbf24'}},
-            {y: [], name: 'Total', line: {color: '#f8fafc'}}
-        ], {...layout, title: 'Energias (J)'});
-
-        Plotly.newPlot('resonChart', [
-            {x: [], y: [], name: 'Curva', line: {color: '#94a3b8'}},
-            {x: [], y: [], mode: 'markers', name: 'Atual', marker: {color: '#ec4899', size: 12}}
-        ], {...layout, title: 'Amplitude vs Frequência'});
-
-        Plotly.newPlot('phaseChart', [
-            {x: [], y: [], name: 'Trajetória', line: {color: '#ec4899', width: 2}}
-        ], {...layout, title: 'Espaço de Fase (Velocidade vs Posição)'});
-    }
-
-    function updateCharts() {
-        Plotly.update('energyChart', { y: [histEk, histEp, histEt] });
-        
-        const px = phaseHist.map(p => p.x);
-        const pv = phaseHist.map(p => p.v);
-        Plotly.update('phaseChart', { x: [px], y: [pv] });
-
-        calcResonanceCurve();
-    }
-
-    function calcResonanceCurve() {
-        const ws = [], amps = [];
-        for(let w=0.1; w<10; w+=0.2) {
-            let A = F0 / Math.sqrt(Math.pow(k - m*w*w, 2) + Math.pow(b*w, 2));
-            ws.push(w); amps.push(A);
-        }
-        const currentA = F0 / Math.sqrt(Math.pow(k - m*wf*wf, 2) + Math.pow(b*wf, 2));
-        Plotly.animate('resonChart', {
-            data: [{x: ws, y: amps}, {x: [wf], y: [currentA]}],
-            traces: [0, 1]
-        }, {transition: {duration: 0}, frame: {duration: 0}});
-    }
-
-    // Controles de Botões
-    document.getElementById('playPause').onclick = (e) => {
-        running = !running;
-        e.target.textContent = running ? 'Pausar' : 'Continuar';
-        if(running) loop();
-    };
-
-    document.getElementById('reset').onclick = () => {
-        t = 0; x = 1.5; v = 0; xE = 1.5; vE = 0;
-        histX = []; histSteady = []; histEuler = []; histEk = []; histEp = []; histEt = []; histT = [];
-        phaseHist = [];
-    };
-
-    document.getElementById('exportCSV').onclick = () => {
-        let csv = "Tempo(s),Posicao_RK4(m),Velocidade(m/s),Energia_Total(J)\n";
-        for(let i=0; i<histT.length; i++) {
-            csv += `${histT[i].toFixed(3)},${histX[i].toFixed(4)},${histEk[i].toFixed(4)},${histEt[i].toFixed(4)}\n`;
-        }
-        const blob = new Blob([csv], {type: 'text/csv'});
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'dados_simulacao.csv'; a.click();
-    };
-
-    initCharts();
-    loop();
-</script>
-</body>
-</html>
+    let running
